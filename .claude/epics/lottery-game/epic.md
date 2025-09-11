@@ -4,7 +4,7 @@ status: backlog
 created: 2025-09-10T08:21:33Z
 progress: 0%
 prd: .claude/prds/lottery-game.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com//issues/1
 ---
 
 # Epic: lottery-game
@@ -139,16 +139,15 @@ github: [Will be updated when synced to GitHub]
 4. **Day 9**: 发布就绪版本完成
 
 ## Tasks Created
-- [ ] 001.md - 数据模型和抽奖逻辑核心实现 (parallel: false)
-- [ ] 002.md - Tauri后端数据持久化服务 (parallel: false)
-- [ ] 003.md - React UI组件和布局开发 (parallel: true)
-- [ ] 004.md - 老虎机动画效果实现 (parallel: true)
-- [ ] 005.md - 历史记录和周期进度功能 (parallel: true)
-- [ ] 006.md - React Context状态管理实现 (parallel: true)
-- [ ] 007.md - 错误处理和性能优化 (parallel: false)
-- [ ] 008.md - 综合测试和构建部署 (parallel: false)
+- [ ] #2 - 数据模型和抽奖逻辑核心实现 (parallel: false)
+- [ ] #3 - Tauri后端数据持久化服务 (parallel: false)
+- [ ] #4 - React UI组件和布局开发 (parallel: true)
+- [ ] #5 - 老虎机动画效果实现 (parallel: true)
+- [ ] #6 - 历史记录和周期进度功能 (parallel: true)
+- [ ] #7 - React Context状态管理实现 (parallel: true)
+- [ ] #8 - 错误处理和性能优化 (parallel: false)
+- [ ] #9 - 综合测试和构建部署 (parallel: false)
 
-总任务数: 8
-并行任务: 4 (Tasks 003-006)
-顺序任务: 4 (Tasks 001-002, 007-008)
-预估总工作量: 90-117 小时
+总任务数:        8
+并行任务:        4
+顺序任务: 4
