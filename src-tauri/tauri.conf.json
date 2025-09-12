@@ -23,6 +23,13 @@
       "csp": null
     }
   },
+  "plugins": {
+    "fs": {
+      "scope": {
+        "$DOCUMENT/*": true
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
