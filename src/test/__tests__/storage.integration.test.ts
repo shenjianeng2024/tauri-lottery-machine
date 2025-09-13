@@ -45,7 +45,7 @@ const createComplexTestState = (): LotteryState => {
       drawNumber: 1
     },
     {
-      prizeId: 'prize_blue_1', 
+      prizeId: 'prize_green_1', 
       timestamp: Date.now() - 5000,
       cycleId: state.currentCycle.id,
       drawNumber: 2
@@ -255,7 +255,7 @@ describe('数据持久化集成测试', () => {
       // 验证所有颜色的奖品都存在
       const redPrizes = testState.availablePrizes.filter(p => p.color === PrizeColor.Red);
       const yellowPrizes = testState.availablePrizes.filter(p => p.color === PrizeColor.Yellow);
-      const bluePrizes = testState.availablePrizes.filter(p => p.color === PrizeColor.Blue);
+      const bluePrizes = testState.availablePrizes.filter(p => p.color === PrizeColor.Green);
       
       expect(redPrizes).toHaveLength(2);
       expect(yellowPrizes).toHaveLength(2);
@@ -267,7 +267,7 @@ describe('数据持久化集成测试', () => {
       // 验证加载后颜色正确
       const loadedRed = loadedState.availablePrizes.filter(p => p.color === PrizeColor.Red);
       const loadedYellow = loadedState.availablePrizes.filter(p => p.color === PrizeColor.Yellow);
-      const loadedBlue = loadedState.availablePrizes.filter(p => p.color === PrizeColor.Blue);
+      const loadedBlue = loadedState.availablePrizes.filter(p => p.color === PrizeColor.Green);
       
       expect(loadedRed).toHaveLength(2);
       expect(loadedYellow).toHaveLength(2);

@@ -18,49 +18,48 @@ export enum PrizeColor {
  * 奖品基础信息接口
  */
 export interface Prize {
-  /** 奖品唯一标识 */
+  /** 奖品唯一标识符 */
   id: string;
-  /** 奖品颜色 */
-  color: PrizeColor;
   /** 奖品名称 */
   name: string;
-  /** 奖品描述（可选） */
-  description?: string;
-  /** 奖品图标或图片路径（可选） */
-  icon?: string;
+  /** 奖品颜色分类 */
+  color: PrizeColor;
+  /** 奖品描述信息 */
+  description: string;
+  /** 奖品价值（可用于排序或展示） */
+  value: number;
 }
 
 /**
- * 抽奖结果接口
- * 记录单次抽奖的详细信息
+ * 抽奖结果记录接口
  */
 export interface LotteryResult {
   /** 中奖奖品ID */
   prizeId: string;
   /** 抽奖时间戳 */
   timestamp: number;
-  /** 所属周期ID */
+  /** 所属抽奖周期ID */
   cycleId: string;
-  /** 在当前周期中的抽奖序号（1-6） */
+  /** 周期内第几次抽奖 */
   drawNumber: number;
 }
 
 /**
  * 抽奖周期接口
- * 每个周期包含6次抽奖，每种颜色恰好2次
+ * 每个周期包含固定次数的抽奖，确保颜色分布的公平性
  */
 export interface LotteryCycle {
-  /** 周期唯一标识 */
+  /** 周期唯一标识符 */
   id: string;
-  /** 周期开始时间 */
+  /** 周期开始时间戳 */
   startTime: number;
-  /** 周期结束时间（完成时设置） */
+  /** 周期结束时间戳（可选，完成后设置） */
   endTime?: number;
-  /** 当前周期的抽奖结果列表 */
-  results: LotteryResult[];
-  /** 周期是否已完成 */
+  /** 是否已完成 */
   completed: boolean;
-  /** 剩余每种颜色的抽奖次数 */
+  /** 该周期所有抽奖结果 */
+  results: LotteryResult[];
+  /** 各颜色剩余可抽次数 */
   remainingDraws: {
     [PrizeColor.Red]: number;
     [PrizeColor.Yellow]: number;
@@ -69,81 +68,88 @@ export interface LotteryCycle {
 }
 
 /**
- * 抽奖系统整体状态接口
+ * 抽奖系统完整状态接口
  */
 export interface LotteryState {
-  /** 当前进行中的周期 */
+  /** 当前活动周期 */
   currentCycle: LotteryCycle;
-  /** 历史已完成周期列表 */
+  /** 历史已完成周期 */
   history: LotteryCycle[];
-  /** 可用奖品列表 */
+  /** 系统可用奖品列表 */
   availablePrizes: Prize[];
-  /** 系统配置 */
+  /** 抽奖配置参数 */
   config: LotteryConfig;
 }
 
 /**
- * 抽奖系统配置接口
+ * 抽奖配置接口
  */
 export interface LotteryConfig {
-  /** 每个周期的抽奖总次数 */
+  /** 每周期总抽奖次数 */
   drawsPerCycle: number;
-  /** 每种颜色在每个周期中的抽奖次数 */
+  /** 每种颜色的抽奖次数 */
   drawsPerColor: number;
-  /** 是否启用动画效果 */
-  enableAnimations: boolean;
-  /** 动画持续时间（毫秒） */
-  animationDuration: number;
 }
 
 /**
  * 抽奖引擎接口
- * 定义核心抽奖逻辑的契约
+ * 定义核心抽奖逻辑的标准方法
  */
 export interface LotteryEngine {
-  /**
-   * 执行一次抽奖
-   * @param state 当前抽奖状态
-   * @returns 更新后的状态和抽奖结果
-   */
+  /** 执行一次抽奖 */
   draw(state: LotteryState): Promise<{
     newState: LotteryState;
     result: LotteryResult;
   }>;
-
-  /**
-   * 初始化新的抽奖周期
-   * @param state 当前状态
-   * @returns 包含新周期的更新状态
-   */
-  initializeNewCycle(state: LotteryState): LotteryState;
-
-  /**
-   * 检查当前周期是否可以进行抽奖
-   * @param cycle 当前周期
-   * @returns 是否可以抽奖
-   */
+  
+  /** 检查是否可以继续抽奖 */
   canDraw(cycle: LotteryCycle): boolean;
-
-  /**
-   * 获取当前周期的进度信息
-   * @param cycle 当前周期
-   * @returns 进度信息
-   */
-  getCycleProgress(cycle: LotteryCycle): CycleProgress;
+  
+  /** 获取周期进度信息 */
+  getCycleProgress(cycle: LotteryCycle): {
+    completedDraws: number;
+    totalDraws: number;
+    percentage: number;
+    remainingByColor: {
+      [PrizeColor.Red]: number;
+      [PrizeColor.Yellow]: number;
+      [PrizeColor.Green]: number;
+    };
+  };
+  
+  /** 初始化新周期 */
+  initializeNewCycle(state: LotteryState): LotteryState;
 }
 
 /**
- * 周期进度信息接口
+ * 抽奖错误类型枚举
+ */
+export enum LotteryErrorCode {
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  CYCLE_COMPLETED = 'CYCLE_COMPLETED',
+  NO_AVAILABLE_PRIZES = 'NO_AVAILABLE_PRIZES',
+  DRAW_LIMIT_EXCEEDED = 'DRAW_LIMIT_EXCEEDED',
+  SYSTEM_ERROR = 'SYSTEM_ERROR',
+  STORAGE_ERROR = 'STORAGE_ERROR',
+  NO_AVAILABLE_COLORS = 'NO_AVAILABLE_COLORS',
+}
+
+/**
+ * 彩色进度状态枚举
+ */
+export enum ColorProgressStatus {
+  Pending = 'pending',
+  InProgress = 'in-progress', 
+  Completed = 'completed'
+}
+
+/**
+ * 抽奖周期进度信息接口
  */
 export interface CycleProgress {
-  /** 已完成的抽奖次数 */
   completedDraws: number;
-  /** 总抽奖次数 */
   totalDraws: number;
-  /** 完成百分比 */
   percentage: number;
-  /** 各颜色剩余次数 */
   remainingByColor: {
     [PrizeColor.Red]: number;
     [PrizeColor.Yellow]: number;
@@ -166,20 +172,8 @@ export class LotteryError extends Error {
     super(message);
     this.code = code;
     this.details = details;
-    super(message);
     this.name = 'LotteryError';
   }
-}
-
-/**
- * 抽奖错误代码枚举
- */
-export enum LotteryErrorCode {
-  CYCLE_COMPLETED = 'CYCLE_COMPLETED',
-  NO_AVAILABLE_PRIZES = 'NO_AVAILABLE_PRIZES', 
-  INVALID_STATE = 'INVALID_STATE',
-  DRAW_LIMIT_REACHED = 'DRAW_LIMIT_REACHED',
-  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR'
 }
 
 /**
@@ -188,20 +182,26 @@ export enum LotteryErrorCode {
 export const DEFAULT_LOTTERY_CONFIG: LotteryConfig = {
   drawsPerCycle: 6,
   drawsPerColor: 2,
-  enableAnimations: true,
-  animationDuration: 2000, // 2秒
 };
 
 /**
- * 创建新周期的工具函数
+ * 生成唯一标识符
+ */
+function generateUniqueId(prefix: string): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `${prefix}_${timestamp}_${random}`;
+}
+
+/**
+ * 创建新的抽奖周期
  */
 export function createNewCycle(): LotteryCycle {
-  const now = Date.now();
   return {
-    id: `cycle_${now}_${Math.random().toString(36).substr(2, 9)}`,
-    startTime: now,
-    results: [],
+    id: generateUniqueId('cycle'),
+    startTime: Date.now(),
     completed: false,
+    results: [],
     remainingDraws: {
       [PrizeColor.Red]: DEFAULT_LOTTERY_CONFIG.drawsPerColor,
       [PrizeColor.Yellow]: DEFAULT_LOTTERY_CONFIG.drawsPerColor,
@@ -211,45 +211,54 @@ export function createNewCycle(): LotteryCycle {
 }
 
 /**
- * 创建默认奖品列表的工具函数
+ * 创建默认奖品列表
  */
 export function createDefaultPrizes(): Prize[] {
   return [
+    // 红色奖品
     {
       id: 'prize_red_1',
+      name: '红色奖品1',
       color: PrizeColor.Red,
-      name: '红色大奖',
-      description: '价值丰厚的红色奖品'
+      description: '精美红色礼品，价值不菲',
+      value: 100,
     },
     {
-      id: 'prize_red_2', 
+      id: 'prize_red_2',
+      name: '红色奖品2',
       color: PrizeColor.Red,
-      name: '红色好礼',
-      description: '精美的红色礼品'
+      description: '限量版红色纪念品',
+      value: 120,
     },
+    // 黄色奖品
     {
       id: 'prize_yellow_1',
+      name: '黄色奖品1',
       color: PrizeColor.Yellow,
-      name: '黄色大奖',
-      description: '价值丰厚的黄色奖品'
+      description: '经典黄色收藏品',
+      value: 80,
     },
     {
       id: 'prize_yellow_2',
-      color: PrizeColor.Yellow, 
-      name: '黄色好礼',
-      description: '精美的黄色礼品'
+      name: '黄色奖品2',
+      color: PrizeColor.Yellow,
+      description: '温馨黄色生活用品',
+      value: 90,
     },
+    // 绿色奖品
     {
       id: 'prize_green_1',
+      name: '绿色奖品1',
       color: PrizeColor.Green,
-      name: '绿色大奖',
-      description: '价值丰厚的绿色奖品'
+      description: '环保绿色健康产品',
+      value: 70,
     },
     {
       id: 'prize_green_2',
+      name: '绿色奖品2',
       color: PrizeColor.Green,
-      name: '绿色好礼',
-      description: '精美的绿色礼品'
+      description: '清新绿色装饰品',
+      value: 85,
     },
   ];
 }

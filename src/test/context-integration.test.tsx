@@ -34,9 +34,9 @@ vi.mock('@/lib/lotteryEngine', () => ({
           ],
           completed: false,
           remainingDraws: {
-            [PrizeColor.Red]: 1,
-            [PrizeColor.Yellow]: 2,
-            [PrizeColor.Green]: 2,
+            red: 1,
+            yellow: 2,
+            green: 2,
           },
         },
         history: [],

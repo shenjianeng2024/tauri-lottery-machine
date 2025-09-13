@@ -1,38 +1,72 @@
 /**
- * 测试环境设置文件
+ * 测试环境设置
  */
 
-import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
-// Mock crypto.getRandomValues for testing
-Object.defineProperty(global, 'crypto', {
-  value: {
-    getRandomValues: (arr: Uint32Array) => {
-      // 为测试提供可预测的随机数
-      // 在实际测试中，我们会在具体测试用例中 mock 这个函数
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.floor(Math.random() * 4294967296);
-      }
-      return arr;
-    },
-  },
-});
-
-// Mock Date.now for deterministic testing
-const originalDateNow = Date.now;
-global.mockDateNow = (timestamp?: number) => {
-  if (timestamp !== undefined) {
-    Date.now = vi.fn(() => timestamp);
-  } else {
-    Date.now = originalDateNow;
-  }
+// Mock Tauri API
+const mockTauri = {
+  invoke: vi.fn(),
 };
 
-// Restore Date.now after each test
-afterEach(() => {
-  Date.now = originalDateNow;
+global.__TAURI__ = mockTauri;
+
+// Mock window.__TAURI__
+Object.defineProperty(window, '__TAURI__', {
+  value: mockTauri,
+  writable: true,
 });
 
-declare global {
-  var mockDateNow: (timestamp?: number) => void;
-}
+// Mock crypto API for tests
+const mockCrypto = {
+  getRandomValues: vi.fn((array: Uint32Array) => {
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 4294967296);
+    }
+    return array;
+  })
+};
+
+Object.defineProperty(global, 'crypto', {
+  value: mockCrypto,
+  writable: true,
+});
+
+// Mock performance API
+Object.defineProperty(global, 'performance', {
+  value: {
+    now: vi.fn(() => Date.now()),
+    mark: vi.fn(),
+    measure: vi.fn(),
+    memory: {
+      usedJSHeapSize: 50 * 1024 * 1024,
+      totalJSHeapSize: 100 * 1024 * 1024,
+      jsHeapSizeLimit: 200 * 1024 * 1024
+    }
+  },
+  writable: true,
+});
+
+// Mock ResizeObserver
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock IntersectionObserver
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock requestAnimationFrame
+global.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+  setTimeout(() => callback(Date.now()), 16);
+  return 1;
+});
+
+global.cancelAnimationFrame = vi.fn();
+
+export { mockTauri };

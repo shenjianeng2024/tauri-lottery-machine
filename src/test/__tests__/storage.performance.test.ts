@@ -42,7 +42,7 @@ const createLargeDataState = (cycleCount: number = 100): LotteryState => {
     };
     
     // 为每个周期生成6次抽奖结果
-    const colors = [PrizeColor.Red, PrizeColor.Red, PrizeColor.Yellow, PrizeColor.Yellow, PrizeColor.Blue, PrizeColor.Blue];
+    const colors = [PrizeColor.Red, PrizeColor.Red, PrizeColor.Yellow, PrizeColor.Yellow, PrizeColor.Green, PrizeColor.Green];
     for (let j = 0; j < 6; j++) {
       const result: LotteryResult = {
         prizeId: `prize_${colors[j].toLowerCase()}_${(j % 2) + 1}`,

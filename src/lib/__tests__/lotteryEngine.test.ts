@@ -22,6 +22,11 @@ import {
   DEFAULT_LOTTERY_CONFIG,
 } from '../../types/lottery';
 
+// Mock Date.now for consistent testing
+const mockDateNow = (timestamp: number) => {
+  vi.spyOn(Date, 'now').mockReturnValue(timestamp);
+};
+
 describe('LotteryEngineImpl', () => {
   let engine: LotteryEngineImpl;
   let mockPrizes: Prize[];
@@ -78,7 +83,7 @@ describe('LotteryEngineImpl', () => {
         remainingByColor: {
           [PrizeColor.Red]: 2,
           [PrizeColor.Yellow]: 2,
-          [PrizeColor.Blue]: 2,
+          [PrizeColor.Green]: 2,
         },
       });
     });
@@ -93,7 +98,7 @@ describe('LotteryEngineImpl', () => {
           drawNumber: 1,
         },
         {
-          prizeId: 'prize_blue_1',
+          prizeId: 'prize_green_1',
           timestamp: Date.now(),
           cycleId: cycle.id,
           drawNumber: 2,
@@ -163,7 +168,7 @@ describe('LotteryEngineImpl', () => {
         },
       };
 
-      await expect(engine.draw(completedState)).rejects.toThrow(LotteryError);
+      await expect(engine.draw(completedState)).rejects.toBeInstanceOf(LotteryError);
       await expect(engine.draw(completedState)).rejects.toThrow('Current cycle is already completed');
     });
 
@@ -173,7 +178,7 @@ describe('LotteryEngineImpl', () => {
         availablePrizes: [],
       };
 
-      await expect(engine.draw(noPrizesState)).rejects.toThrow(LotteryError);
+      await expect(engine.draw(noPrizesState)).rejects.toBeInstanceOf(LotteryError);
       await expect(engine.draw(noPrizesState)).rejects.toThrow('No available prizes configured');
     });
 
@@ -193,7 +198,7 @@ describe('LotteryEngineImpl', () => {
         currentCycle: fullCycle,
       };
 
-      await expect(engine.draw(fullState)).rejects.toThrow(LotteryError);
+      await expect(engine.draw(fullState)).rejects.toBeInstanceOf(LotteryError);
       await expect(engine.draw(fullState)).rejects.toThrow('Draw limit reached for current cycle');
     });
 
@@ -210,7 +215,7 @@ describe('LotteryEngineImpl', () => {
         remainingDraws: {
           [PrizeColor.Red]: 0,
           [PrizeColor.Yellow]: 0,
-          [PrizeColor.Blue]: 1, // Only one blue draw remaining
+          [PrizeColor.Green]: 1, // Only one green draw remaining
         },
       };
 
@@ -219,9 +224,9 @@ describe('LotteryEngineImpl', () => {
         currentCycle: nearCompleteCycle,
       };
 
-      // Mock to select blue color
+      // Mock to select green color
       const mockCrypto = vi.fn();
-      mockCrypto.mockReturnValue(new Uint32Array([2])); // Blue is at index 2
+      mockCrypto.mockReturnValue(new Uint32Array([2])); // Green is at index 2
       global.crypto.getRandomValues = mockCrypto;
 
       const result = await engine.draw(nearCompleteState);
@@ -240,13 +245,13 @@ describe('LotteryEngineImpl', () => {
 
   describe('Color selection logic', () => {
     it('should only select colors with remaining draws', async () => {
-      // Create a state where only blue has remaining draws
+      // Create a state where only green has remaining draws
       const limitedCycle = {
         ...initialState.currentCycle,
         remainingDraws: {
           [PrizeColor.Red]: 0,
           [PrizeColor.Yellow]: 0,
-          [PrizeColor.Blue]: 2,
+          [PrizeColor.Green]: 2,
         },
       };
 
@@ -256,14 +261,14 @@ describe('LotteryEngineImpl', () => {
       };
 
       const mockCrypto = vi.fn();
-      mockCrypto.mockReturnValue(new Uint32Array([0])); // Any index, should select blue
+      mockCrypto.mockReturnValue(new Uint32Array([0])); // Any index, should select green
       global.crypto.getRandomValues = mockCrypto;
 
       const result = await engine.draw(limitedState);
 
-      // Should draw a blue prize
+      // Should draw a green prize
       const drawnPrize = mockPrizes.find(p => p.id === result.result.prizeId);
-      expect(drawnPrize?.color).toBe(PrizeColor.Blue);
+      expect(drawnPrize?.color).toBe(PrizeColor.Green);
     });
 
     it('should throw error when no colors have remaining draws', async () => {
@@ -272,7 +277,7 @@ describe('LotteryEngineImpl', () => {
         remainingDraws: {
           [PrizeColor.Red]: 0,
           [PrizeColor.Yellow]: 0,
-          [PrizeColor.Blue]: 0,
+          [PrizeColor.Green]: 0,
         },
       };
 
@@ -281,7 +286,7 @@ describe('LotteryEngineImpl', () => {
         currentCycle: noDrawsLeft,
       };
 
-      await expect(engine.draw(noDrawsState)).rejects.toThrow(LotteryError);
+      await expect(engine.draw(noDrawsState)).rejects.toBeInstanceOf(LotteryError);
       await expect(engine.draw(noDrawsState)).rejects.toThrow('No available colors for drawing');
     });
   });
@@ -363,13 +368,13 @@ describe('Validation functions', () => {
         { prizeId: 'prize_red_2', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 2 },
         { prizeId: 'prize_yellow_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 3 },
         { prizeId: 'prize_yellow_2', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 4 },
-        { prizeId: 'prize_blue_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 5 },
-        { prizeId: 'prize_blue_2', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 6 },
+        { prizeId: 'prize_green_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 5 },
+        { prizeId: 'prize_green_2', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 6 },
       ],
       remainingDraws: {
         [PrizeColor.Red]: 0,
         [PrizeColor.Yellow]: 0,
-        [PrizeColor.Blue]: 0,
+        [PrizeColor.Green]: 0,
       },
     };
   });
@@ -387,7 +392,7 @@ describe('Validation functions', () => {
     });
 
     it('should return false for unfair cycle', () => {
-      // Create unfair distribution (3 red, 2 yellow, 1 blue)
+      // Create unfair distribution (3 red, 2 yellow, 1 green)
       const unfairCycle = {
         ...completedCycle,
         results: [
@@ -396,7 +401,7 @@ describe('Validation functions', () => {
           { prizeId: 'prize_red_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 3 }, // Extra red
           { prizeId: 'prize_yellow_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 4 },
           { prizeId: 'prize_yellow_2', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 5 },
-          { prizeId: 'prize_blue_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 6 },
+          { prizeId: 'prize_green_1', timestamp: Date.now(), cycleId: 'test-cycle', drawNumber: 6 },
         ],
       };
 
@@ -442,7 +447,7 @@ describe('Validation functions', () => {
       expect(stats.colorDistribution).toEqual({
         [PrizeColor.Red]: 2,
         [PrizeColor.Yellow]: 2,
-        [PrizeColor.Blue]: 2,
+        [PrizeColor.Green]: 2,
       });
     });
 
@@ -457,7 +462,7 @@ describe('Validation functions', () => {
       expect(stats.colorDistribution).toEqual({
         [PrizeColor.Red]: 4,
         [PrizeColor.Yellow]: 4,
-        [PrizeColor.Blue]: 4,
+        [PrizeColor.Green]: 4,
       });
     });
 
@@ -487,7 +492,7 @@ describe('Validation functions', () => {
           { prizeId: 'prize_red_1', timestamp: Date.now(), cycleId: 'unfair', drawNumber: 3 },
           { prizeId: 'prize_red_2', timestamp: Date.now(), cycleId: 'unfair', drawNumber: 4 },
           { prizeId: 'prize_yellow_1', timestamp: Date.now(), cycleId: 'unfair', drawNumber: 5 },
-          { prizeId: 'prize_blue_1', timestamp: Date.now(), cycleId: 'unfair', drawNumber: 6 },
+          { prizeId: 'prize_green_1', timestamp: Date.now(), cycleId: 'unfair', drawNumber: 6 },
         ],
       };
 

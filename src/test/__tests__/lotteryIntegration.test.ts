@@ -69,7 +69,7 @@ describe('Lottery System Integration Tests', () => {
       const colorCounts = {
         [PrizeColor.Red]: 0,
         [PrizeColor.Yellow]: 0,
-        [PrizeColor.Blue]: 0,
+        [PrizeColor.Green]: 0,
       };
 
       // Track remaining draws after each draw
@@ -88,14 +88,14 @@ describe('Lottery System Integration Tests', () => {
           const remaining = currentState.currentCycle.remainingDraws;
           expect(remaining[PrizeColor.Red]).toBe(2 - colorCounts[PrizeColor.Red]);
           expect(remaining[PrizeColor.Yellow]).toBe(2 - colorCounts[PrizeColor.Yellow]);
-          expect(remaining[PrizeColor.Blue]).toBe(2 - colorCounts[PrizeColor.Blue]);
+          expect(remaining[PrizeColor.Green]).toBe(2 - colorCounts[PrizeColor.Green]);
         }
       }
 
       // Final verification
       expect(colorCounts[PrizeColor.Red]).toBe(2);
       expect(colorCounts[PrizeColor.Yellow]).toBe(2);
-      expect(colorCounts[PrizeColor.Blue]).toBe(2);
+      expect(colorCounts[PrizeColor.Green]).toBe(2);
     });
 
     it('should generate correct draw numbers in sequence', async () => {
@@ -143,7 +143,7 @@ describe('Lottery System Integration Tests', () => {
       expect(stats.colorDistribution).toEqual({
         [PrizeColor.Red]: cycleCount * 2,
         [PrizeColor.Yellow]: cycleCount * 2,
-        [PrizeColor.Blue]: cycleCount * 2,
+        [PrizeColor.Green]: cycleCount * 2,
       });
     });
 
